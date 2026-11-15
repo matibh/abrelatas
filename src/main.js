@@ -204,7 +204,8 @@ let desiredFocus;
 if(t<11){desiredFocus=new THREE.Vector3(-3.35,1.5,.15).lerp(focusFactory,smooth(3,11,t));distance=THREE.MathUtils.lerp(5.25,6.6,smooth(3,11,t))}
 else if(t<29){desiredFocus=focusFactory.clone();distance=6.6}
 else if(t<40){desiredFocus=focusFactory.clone().lerp(focusPacking,pack);distance=THREE.MathUtils.lerp(6.6,5.8,pack)}
-else if(t<57){desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=5.8}\nelse if(t<70){desiredFocus=new THREE.Vector3(-3.2,3.2,-4.1);distance=5.2}\nelse if(t<82){desiredFocus=new THREE.Vector3(7,1.8,7);distance=6.4}\nelse{desiredFocus=new THREE.Vector3(0,2.1,-2.2);distance=6.8}
+else if(t<57){desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=5.8}
+else if(t<70){desiredFocus=new THREE.Vector3(-3.2,3.2,-4.1);distance=5.2}\nelse if(t<82){desiredFocus=new THREE.Vector3(7,1.8,7);distance=6.4}\nelse{desiredFocus=new THREE.Vector3(0,2.1,-2.2);distance=6.8}
 target.lerp(desiredFocus,.075);updateCamera();
 hero.position.x=-.2+Math.min(t/25,1)*.5;hero.position.y=1.2+Math.sin(now*.0015)*.025;
 body.rotation.z=Math.sin(now*.0012)*.012;
