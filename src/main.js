@@ -4,8 +4,8 @@ import './style.css';
 const app=document.querySelector('#app');
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#8d7860');
-scene.fog=new THREE.FogExp2('#8d7860',.026);
-const camera=new THREE.PerspectiveCamera(39,innerWidth/innerHeight,.1,100);
+scene.fog=new THREE.FogExp2('#8d7860',.012);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,180);
 camera.position.set(7.7,5.3,9.2);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);
@@ -14,7 +14,7 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFi
 app.prepend(renderer.domElement);
 
 scene.add(new THREE.HemisphereLight(0xdce5e5,0x55402d,2.1));
-const key=new THREE.DirectionalLight(0xffd7a1,3.2);key.position.set(-4,9,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-12;key.shadow.camera.right=12;key.shadow.camera.top=12;key.shadow.camera.bottom=-12;scene.add(key);
+const key=new THREE.DirectionalLight(0xffd7a1,3.2);key.position.set(-4,9,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-22;key.shadow.camera.right=22;key.shadow.camera.top=18;key.shadow.camera.bottom=-18;scene.add(key);
 const fill=new THREE.DirectionalLight(0xa8c4d4,1.1);fill.position.set(7,5,-5);scene.add(fill);
 const warm=new THREE.PointLight(0xffad63,35,15);warm.position.set(-5,4,-2);scene.add(warm);
 
@@ -25,14 +25,37 @@ function cube(parent,name,pos,scale,material,cast=true){const m=new THREE.Mesh(b
 function cylinder(parent,pos,r1,r2,h,material,rot=[0,0,0],segments=32){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,segments),material);m.position.set(...pos);m.rotation.set(...rot);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function group(parent,pos=[0,0,0]){const g=new THREE.Group();g.position.set(...pos);parent.add(g);return g}
 
-// Factory floor and architectural shell
-cube(scene,'floor',[0,-.16,0],[30,.3,22],floorMat);
-for(let x=-12;x<=12;x+=4){cube(scene,'floor seam',[x,.002,0],[.025,.012,22],darkSteel,false)}
-cube(scene,'back wall',[0,5,-8],[30,10,.35],mat('#6a6254'));
-cube(scene,'left wall',[-13,5,0],[.35,10,16],mat('#59594e'));
-for(let x=-10;x<=10;x+=5){cube(scene,'window frame',[x,5.7,-7.78],[.12,4,.15],darkSteel);cube(scene,'window sill',[x,3.7,-7.78],[4,.12,.3],darkSteel)}
-// Ceiling beams and lamps
-for(let x=-10;x<=10;x+=5){cube(scene,'beam',[x,9,-1],[.22,.25,15],darkSteel);const lamp=cylinder(scene,[x,8.65,-1],.16,.16,.08,paint);lamp.rotation.x=Math.PI/2;const glow=new THREE.PointLight(0xffd29b,16,9);glow.position.set(x,8.1,-1);scene.add(glow)}
+// Gran nave industrial: escala amplia, sin una pared pegada al protagonista.
+cube(scene,'factory floor',[0,-.16,0],[54,.3,44],floorMat);
+for(let x=-25;x<=25;x+=5){cube(scene,'floor expansion joint',[x,.002,0],[.025,.012,44],darkSteel,false)}
+for(let z=-20;z<=20;z+=5){cube(scene,'floor expansion joint',[0,.003,z],[54,.012,.025],darkSteel,false)}
+// La pared del fondo queda muy lejos; laterales abiertos para dar profundidad.
+cube(scene,'distant rear wall',[0,7,-23],[52,14,.4],mat('#665f52'));
+for(let x=-22;x<=22;x+=7.3){
+ cube(scene,'rear window mullion',[x,7.8,-22.76],[.12,5.4,.16],darkSteel);
+ cube(scene,'rear window sill',[x,5.05,-22.76],[7.2,.14,.3],darkSteel);
+ cube(scene,'rear window lintel',[x,10.55,-22.76],[7.2,.14,.3],darkSteel);
+}
+// Pilares, cerchas y vigas altas que hacen legible el volumen del galpón.
+for(let x=-24;x<=24;x+=8){
+ cube(scene,'structural column',[x,6,-18],[.42,12,.48],darkSteel);
+ cube(scene,'column foot',[x,.45,-18],[.9,.9,.9],paint);
+ cube(scene,'roof cross beam',[x,12.2,-1],[.3,.35,42],darkSteel);
+ const lamp=cylinder(scene,[x,11.55,-1],.2,.2,.1,paint,[Math.PI/2,0,0]);
+ const glow=new THREE.PointLight(0xffd29b,24,17);glow.position.set(x,10.9,-1);scene.add(glow);
+}
+for(let z=-18;z<=18;z+=6){
+ cube(scene,'roof truss',[0,12.1,z],[52,.16,.2],darkSteel);
+ cube(scene,'roof ridge',[0,13,z],[.24,.2,52],yellow);
+}
+// Claraboyas altas: luz fría de mañana sobre el área de producción.
+for(let x=-16;x<=16;x+=8){
+ const skylight=cube(scene,'skylight',[x,13.1,-1],[5,.08,30],glass,false);
+}
+for(let x=-22;x<=22;x+=8){
+ cube(scene,'far support',[x,5,17],[.35,10,.35],darkSteel);
+}
+
 // Production line
 const belt=group(scene,[0,0,0]);
 cube(belt,'conveyor base',[0,.7,0],[12,.55,3.1],darkSteel);
@@ -46,7 +69,7 @@ cube(press,'press column',[0,3.8,-2],[.45,5,.45],darkSteel);cube(press,'press he
 const ramTip=cylinder(press,[0,4.02,.1],.28,.18,.25,copper);
 for(let i=0;i<3;i++){const arm=group(scene,[-6+i*1.1,2.5,-2.6]);cylinder(arm,[0,.7,0],.13,.13,1.4,yellow);const joint=cylinder(arm,[0,1.45,0],.22,.22,.22,darkSteel);joint.rotation.z=Math.PI/2;cube(arm,'arm segment',[.35,1.85,0],[.85,.16,.18],yellow);cylinder(arm,[.75,1.67,0],.12,.12,.42,steel,[0,0,Math.PI/2])}
 // Background stacked crates
-for(let i=0;i<7;i++){const x=-10+(i%4)*1.25,z=-4-Math.floor(i/4)*1.3;cube(scene,'crate',[x,.65,z],[1.05,1.3,1.05],cardboard);for(let y=.15;y<1.3;y+=.38)cube(scene,'crate stripe',[x,y,z+.53],[.9,.035,.025],yellow,false)}
+for(let i=0;i<12;i++){const x=-20+(i%6)*1.35,z=-10-Math.floor(i/6)*1.5;cube(scene,'crate',[x,.65,z],[1.05,1.3,1.05],cardboard);for(let y=.15;y<1.3;y+=.38)cube(scene,'crate stripe',[x,y,z+.53],[.9,.035,.025],yellow,false)}
 // Hero can opener model, pivot group
 const hero=group(scene,[-.2,1.2,0]);
 const body=group(hero,[0,.38,0]);
@@ -95,13 +118,13 @@ const rollers=[];for(let i=0;i<24;i++){const r=cylinder(scene,[-5.6+i*.48,.68,1.
 const dust=[];for(let i=0;i<85;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.018+Math.random()*.025,6,6),new THREE.MeshBasicMaterial({color:0xffd7a0,transparent:true,opacity:.14+Math.random()*.22}));p.position.set((Math.random()-.5)*24,Math.random()*8-1,-6+Math.random()*12);scene.add(p);dust.push({mesh:p,speed:.15+Math.random()*.35,phase:Math.random()*6})}
 
 // Camera orbit: constrained, protagonist stays framed
-let yaw=.66,pitch=.27,distance=7.2,target=new THREE.Vector3(-3.2,1.55,.15),drag=false,lastX=0,lastY=0;
+let yaw=.66,pitch=.24,distance=5.25,target=new THREE.Vector3(-3.2,1.55,.15),drag=false,lastX=0,lastY=0;
 function updateCamera(){const p=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*distance,Math.sin(pitch)*distance,Math.cos(yaw)*Math.cos(pitch)*distance);camera.position.copy(target).add(p);camera.lookAt(target)}
 updateCamera();
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;yaw-=dx*.005;pitch=Math.max(-.05,Math.min(.9,pitch+dy*.004));updateCamera()});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);
-renderer.domElement.addEventListener('wheel',e=>{distance=Math.max(5.8,Math.min(13,distance+e.deltaY*.009));updateCamera()},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{distance=Math.max(3.8,Math.min(11,distance+e.deltaY*.009));updateCamera()},{passive:true});
 renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Story timeline
@@ -127,10 +150,10 @@ const focusFactory=new THREE.Vector3(-1.15,1.85,.05);
 const focusPacking=new THREE.Vector3(7.15,1.9,.05);
 const focusEnd=new THREE.Vector3(7.5,1.45,-.1);
 let desiredFocus;
-if(t<11){desiredFocus=new THREE.Vector3(-3.2,1.55,.15).lerp(focusFactory,smooth(3,11,t));distance=THREE.MathUtils.lerp(7.2,9.1,smooth(3,11,t))}
-else if(t<29){desiredFocus=focusFactory.clone();distance=9.1}
-else if(t<40){desiredFocus=focusFactory.clone().lerp(focusPacking,pack);distance=THREE.MathUtils.lerp(9.1,7.6,pack)}
-else{desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=7.6}
+if(t<11){desiredFocus=new THREE.Vector3(-3.35,1.5,.15).lerp(focusFactory,smooth(3,11,t));distance=THREE.MathUtils.lerp(5.25,6.6,smooth(3,11,t))}
+else if(t<29){desiredFocus=focusFactory.clone();distance=6.6}
+else if(t<40){desiredFocus=focusFactory.clone().lerp(focusPacking,pack);distance=THREE.MathUtils.lerp(6.6,5.8,pack)}
+else{desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=5.8}
 target.lerp(desiredFocus,.075);updateCamera();
 hero.position.x=-.2+Math.min(t/25,1)*.5;hero.position.y=1.2+Math.sin(now*.0015)*.025;
 body.rotation.z=Math.sin(now*.0012)*.012;
@@ -138,13 +161,13 @@ if(t<12){hero.position.x=-3.8+intro*3.6;hero.position.z=.15;hero.scale.setScalar
 else if(t<21){hero.scale.setScalar(.92);hero.position.x=-.2;for(let i=0;i<parts.length;i++){const p=parts[i];const targetPos=original[i];const spread=new THREE.Vector3((i%3-1)*.45,1.2+Math.floor(i/3)*.22,(i%2?1:-1)*.55);p.position.lerpVectors(spread,targetPos,assemble)}}
 else if(t<29){hero.position.set(-.1,1.2,.1);body.rotation.z=Math.sin((t-21)*5)*.045;gear.rotation.z=t*2;wheel.rotation.z=t*3}
 else if(t<40){hero.position.set(7.5,2.05,.1);hero.scale.setScalar(.92);body.rotation.z=0;blister.visible=true;packHero.rotation.y=0;const f=smooth(29,35,t);blister.scale.setScalar(.01+f*.95);blister.rotation.y=Math.sin(t*1.4)*.04}
-else{blister.visible=false;carton.visible=true;const f=smooth(40,46,t);carton.scale.setScalar(.1+f*.9);flap1.rotation.x=-f*1.45;flap2.rotation.x=f*1.45;hero.visible=false;const fade=smooth(48,54,t);scene.fog.density=.026+fade*.07;scene.background.lerpColors(new THREE.Color('#8d7860'),new THREE.Color('#171916'),fade);renderer.domElement.style.opacity=String(1-fade*.9)}
+else{blister.visible=false;carton.visible=true;const f=smooth(40,46,t);carton.scale.setScalar(.1+f*.9);flap1.rotation.x=-f*1.45;flap2.rotation.x=f*1.45;hero.visible=false;const fade=smooth(48,54,t);scene.fog.density=.012+fade*.07;scene.background.lerpColors(new THREE.Color('#8d7860'),new THREE.Color('#171916'),fade);renderer.domElement.style.opacity=String(1-fade*.9)}
 for(const d of dust){d.mesh.position.y+=Math.sin(now*.0003+d.phase)*.0007;d.mesh.position.x+=Math.sin(now*.0002+d.phase)*.0004}
 if(t>=duration&&!completed){completed=true;document.querySelector('#end-card').classList.remove('hidden')}
 renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 document.querySelector('#skip').addEventListener('click',()=>{start=performance.now()-(duration-1)*1000});
 document.querySelector('#skip').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){start=performance.now()-(duration-1)*1000}});
-document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;scene.fog.density=.026;scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
+document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;scene.fog.density=.012;scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
 setTimeout(()=>document.querySelector('#loading').classList.add('done'),700);
