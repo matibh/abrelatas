@@ -117,6 +117,51 @@ const brandPlate=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.77),brandMat);bran
 const rollers=[];for(let i=0;i<24;i++){const r=cylinder(scene,[-5.6+i*.48,.68,1.55],.12,.12,3.1,darkSteel,[Math.PI/2,0,0]);rollers.push(r)}
 const dust=[];for(let i=0;i<85;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.018+Math.random()*.025,6,6),new THREE.MeshBasicMaterial({color:0xffd7a0,transparent:true,opacity:.14+Math.random()*.22}));p.position.set((Math.random()-.5)*24,Math.random()*8-1,-6+Math.random()*12);scene.add(p);dust.push({mesh:p,speed:.15+Math.random()*.35,phase:Math.random()*6})}
 
+
+/* Chapter I — the world beyond the factory */
+const factoryObjects=[...scene.children];
+const lifeScene=group(scene);
+lifeScene.visible=false;
+lifeScene.add(new THREE.HemisphereLight(0xe8e4d5,0x514536,2.4));
+const lifeSun=new THREE.DirectionalLight(0xffd5a0,3.1);lifeSun.position.set(-5,9,7);lifeSun.castShadow=true;lifeScene.add(lifeSun);
+const store=group(lifeScene);
+const home=group(lifeScene);home.visible=false;
+const storeFloor=cube(store,'supermarket floor',[0,-.15,0],[34,.3,26],mat('#aaa397'));
+cube(store,'supermarket ceiling',[0,8,-1],[34,.25,26],mat('#d7d2c5'),false);
+for(let x=-14;x<=14;x+=7){cube(store,'ceiling light panel',[x,7.82,0],[4.2,.06,7],mat('#fff0cf'),false);const l=new THREE.PointLight(0xffe6c5,18,13);l.position.set(x,7.3,0);store.add(l)}
+// Long shelves create a quiet, ordinary supermarket aisle.
+for(const z of [-5,0,5]){
+ cube(store,'aisle shelf',[0,2.2,z],[23,.28,.9],mat('#77756d'));
+ for(let y=1.1;y<=5.5;y+=1.45){
+  cube(store,'shelf level',[0,y,z],[23,.12,1.25],mat('#77756d'));
+  for(let x=-10.5;x<=10.5;x+=1.25){
+   const colors=['#b65c48','#d4b16f','#668477','#9d9a80','#64758a'];
+   cube(store,'grocery package',[x,y+.48,z+.08],[.48,.82,.55],mat(colors[Math.abs(Math.round(x*3)+Math.round(z))%colors.length]),false);
+  }
+ }
+}
+const shelfHeroSpot=new THREE.Vector3(-3.2,3.15,-4.25);
+const checkout=group(store,[7,0,7]);
+cube(checkout,'checkout counter',[0,1,0],[5,.35,2.2],mat('#6b6256'));
+cube(checkout,'checkout conveyor',[0,1.22,0],[3.4,.08,1.65],beltMat);
+const checkoutLight=cube(checkout,'checkout display',[1.65,1.65,0],[.35,.5,.35],darkSteel);
+const homeFloor=cube(home,'kitchen floor',[0,-.15,0],[20,.3,16],mat('#9a8872'));
+cube(home,'kitchen back wall',[0,4,-7],[20,8,.25],mat('#d5c5aa'));
+cube(home,'kitchen side wall',[-9,4,0],[.25,8,14],mat('#cbb99d'));
+cube(home,'window frame',[-2,4.5,-6.82],[4.2,3.2,.16],mat('#f0e6d4'));
+cube(home,'window glass',[-2,4.5,-6.72],[3.8,2.8,.05],glass,false);
+cube(home,'kitchen counter',[0,1.15,-3.8],[12,.35,2.1],mat('#79695a'));
+cube(home,'cabinet base',[0,.48,-3.8],[11.5,1.2,1.7],mat('#9b775b'));
+for(let x=-5;x<=5;x+=2.5){cube(home,'cabinet door',[x,.48,-2.91],[2.25,1.05,.06],mat('#b18d6b'))}
+cube(home,'upper cabinets',[2.5,5.4,-6.1],[6.2,2.1,.7],mat('#a88768'));
+cube(home,'kitchen table',[2,0.85,2.2],[4.2,.22,2.8],mat('#79563d'));
+for(const x of [.2,3.8])for(const z of [1.1,3.3])cube(home,'table leg',[x,.38,z],[.14,.9,.14],darkSteel);
+const kitchenCan=cylinder(home,[-1.2,1.45,-3.8],.42,.42,.9,mat('#b7b9b1',.45,.3),[0,0,0],48);
+const canRim=cylinder(home,[-1.2,1.91,-3.8],.43,.43,.08,steel);
+const drawer=group(home,[4,1.05,-2.65]);
+cube(drawer,'drawer front',[0,0,0],[2.4,.65,.16],mat('#775c45'));
+cube(drawer,'drawer handle',[0,.08,.12],[.6,.07,.08],copper);
+
 // Camera orbit: constrained, protagonist stays framed
 let yaw=.66,pitch=.24,distance=5.25,target=new THREE.Vector3(-3.2,1.55,.15),drag=false,lastX=0,lastY=0;
 function updateCamera(){const p=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*distance,Math.sin(pitch)*distance,Math.cos(yaw)*Math.cos(pitch)*distance);camera.position.copy(target).add(p);camera.lookAt(target)}
@@ -135,10 +180,16 @@ const captions=[
 {at:21,k:'CONTROL DE CALIDAD',t:'Su primer trabajo.',p:'Una lata de prueba. Un giro. Y funciona.',label:'LA PRIMERA LATA'},
 {at:30,k:'ÁREA DE EMPAQUETADO',t:'Listo para conocer<br/>el mundo.',p:'Lo colocan en un blíster. Ya tiene un nombre y un modelo.',label:'EL EMPAQUETADO'},
 {at:40,k:'DEPÓSITO · 08:16 AM',t:'Entre muchos, espera<br/>su momento.',p:'La caja se cierra. Afuera, el mundo sigue.',label:'EN CAMINO'},
-{at:49,k:'FIN DEL PRÓLOGO',t:'Una vida entera<br/>está por comenzar.',p:'Próxima parada: el supermercado.',label:'EL VIAJE COMIENZA'}
+{at:49,k:'FIN DEL PRÓLOGO',t:'Una vida entera<br/>está por comenzar.',p:'La caja se cierra. Y el mundo empieza a moverse.',label:'EL VIAJE COMIENZA'},
+{at:58,k:'SUPERMERCADO · 10:24 AM',t:'Miles de productos.<br/>Una sola elección.',p:'Durante horas, espera en una góndola. Sin saber qué es esperar.',label:'EN LA GÓNDOLA'},
+{at:70,k:'UNA COMPRA MÁS',t:'Alguien lo lleva<br/>a casa.',p:'Una mano lo elige. La puerta del supermercado se cierra detrás.',label:'EL ELEGIDO'},
+{at:82,k:'UNA COCINA · 18:42 PM',t:'Un lugar al que<br/>pertenecer.',p:'Lo dejan sobre la mesada. Afuera, el día se apaga.',label:'EL HOGAR'},
+{at:94,k:'SU PRIMERA NOCHE',t:'La primera lata<br/>de verdad.',p:'Una cena sencilla. Una mano lo toma. El metal encaja en el borde.',label:'CLAC'},
+{at:105,k:'UNOS MESES DESPUÉS',t:'Y sin darse cuenta,<br/>ya es parte de todo.',p:'El cajón se cierra. La casa sigue viviendo.',label:'LA VIDA COMIENZA'},
+{at:114,k:'CAPÍTULO I · CONTINUARÁ',t:'Mañana habrá<br/>otra lata.',p:'Y después, muchas más.',label:'UNA VIDA DE SERVICIO'}
 ];
 const title=document.querySelector('#caption-title'),copy=document.querySelector('#caption-copy'),kicker=document.querySelector('#caption-kicker'),progress=document.querySelector('#timeline-progress'),timelineLabel=document.querySelector('#timeline-label');
-let start=performance.now(),duration=57,completed=false;
+let start=performance.now(),duration=122,completed=false;
 function setCaption(time){let c=captions[0];for(const item of captions)if(time>=item.at)c=item;const idx=captions.indexOf(c);if(setCaption.last!==idx){setCaption.last=idx;kicker.textContent=c.k;title.innerHTML=c.t;copy.textContent=c.p;timelineLabel.textContent=c.label}}
 setCaption.last=-1;
 function smooth(a,b,t){const x=THREE.MathUtils.clamp((t-a)/(b-a),0,1);return x*x*(3-2*x)}
@@ -153,7 +204,7 @@ let desiredFocus;
 if(t<11){desiredFocus=new THREE.Vector3(-3.35,1.5,.15).lerp(focusFactory,smooth(3,11,t));distance=THREE.MathUtils.lerp(5.25,6.6,smooth(3,11,t))}
 else if(t<29){desiredFocus=focusFactory.clone();distance=6.6}
 else if(t<40){desiredFocus=focusFactory.clone().lerp(focusPacking,pack);distance=THREE.MathUtils.lerp(6.6,5.8,pack)}
-else{desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=5.8}
+else if(t<57){desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=5.8}\nelse if(t<70){desiredFocus=new THREE.Vector3(-3.2,3.2,-4.1);distance=5.2}\nelse if(t<82){desiredFocus=new THREE.Vector3(7,1.8,7);distance=6.4}\nelse{desiredFocus=new THREE.Vector3(0,2.1,-2.2);distance=6.8}
 target.lerp(desiredFocus,.075);updateCamera();
 hero.position.x=-.2+Math.min(t/25,1)*.5;hero.position.y=1.2+Math.sin(now*.0015)*.025;
 body.rotation.z=Math.sin(now*.0012)*.012;
@@ -161,13 +212,19 @@ if(t<12){hero.position.x=-3.8+intro*3.6;hero.position.z=.15;hero.scale.setScalar
 else if(t<21){hero.scale.setScalar(.92);hero.position.x=-.2;for(let i=0;i<parts.length;i++){const p=parts[i];const targetPos=original[i];const spread=new THREE.Vector3((i%3-1)*.45,1.2+Math.floor(i/3)*.22,(i%2?1:-1)*.55);p.position.lerpVectors(spread,targetPos,assemble)}}
 else if(t<29){hero.position.set(-.1,1.2,.1);body.rotation.z=Math.sin((t-21)*5)*.045;gear.rotation.z=t*2;wheel.rotation.z=t*3}
 else if(t<40){hero.position.set(7.5,2.05,.1);hero.scale.setScalar(.92);body.rotation.z=0;blister.visible=true;packHero.rotation.y=0;const f=smooth(29,35,t);blister.scale.setScalar(.01+f*.95);blister.rotation.y=Math.sin(t*1.4)*.04}
-else{blister.visible=false;carton.visible=true;const f=smooth(40,46,t);carton.scale.setScalar(.1+f*.9);flap1.rotation.x=-f*1.45;flap2.rotation.x=f*1.45;hero.visible=false;const fade=smooth(48,54,t);scene.fog.density=.012+fade*.07;scene.background.lerpColors(new THREE.Color('#8d7860'),new THREE.Color('#171916'),fade);renderer.domElement.style.opacity=String(1-fade*.9)}
+else{blister.visible=false;carton.visible=true;const f=smooth(40,46,t);carton.scale.setScalar(.1+f*.9);flap1.rotation.x=-f*1.45;flap2.rotation.x=f*1.45;hero.visible=false;const fade=smooth(51,57,t);scene.fog.density=.012+fade*.07;scene.background.lerpColors(new THREE.Color('#8d7860'),new THREE.Color('#171916'),fade);renderer.domElement.style.opacity=String(1-fade)}
+if(t>=57){
+ if(!lifeScene.visible){for(const o of factoryObjects)o.visible=false;lifeScene.visible=true;store.visible=true;home.visible=false;scene.fog=new THREE.FogExp2('#a89d8a',.018);scene.background.set('#a89d8a');renderer.domElement.style.opacity='1';hero.visible=true;hero.scale.setScalar(.42);hero.position.set(shelfHeroSpot.x,shelfHeroSpot.y,shelfHeroSpot.z);hero.rotation.set(0,-.2,0);blister.visible=false;carton.visible=false}
+ if(t<70){store.visible=true;home.visible=false;hero.visible=true;hero.position.lerp(shelfHeroSpot,.08);hero.scale.setScalar(.42);target.lerp(new THREE.Vector3(-3.2,3.2,-4.1),.06);scene.fog.color.set('#a89d8a')}
+ else if(t<82){const travel=smooth(70,82,t);hero.position.lerp(new THREE.Vector3(7,1.5,7),.08);hero.scale.setScalar(.42);target.lerp(new THREE.Vector3(7,1.8,7),.06)}
+ else{store.visible=false;home.visible=true;hero.visible=true;const arrival=smooth(82,88,t);hero.position.lerp(new THREE.Vector3(-1.2,1.95,-3.8),.07);hero.scale.setScalar(.38);target.lerp(new THREE.Vector3(0,2.1,-2.2),.05);if(t>94){hero.rotation.z=Math.sin(now*.001)*.015;gear.rotation.z=now*.002;wheel.rotation.z=now*.0025}}
+}
 for(const d of dust){d.mesh.position.y+=Math.sin(now*.0003+d.phase)*.0007;d.mesh.position.x+=Math.sin(now*.0002+d.phase)*.0004}
 if(t>=duration&&!completed){completed=true;document.querySelector('#end-card').classList.remove('hidden')}
 renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 document.querySelector('#skip').addEventListener('click',()=>{start=performance.now()-(duration-1)*1000});
 document.querySelector('#skip').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){start=performance.now()-(duration-1)*1000}});
-document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;scene.fog.density=.012;scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
+document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;for(const o of factoryObjects)o.visible=true;lifeScene.visible=false;store.visible=true;home.visible=false;scene.fog=new THREE.FogExp2('#8d7860',.012);scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
 setTimeout(()=>document.querySelector('#loading').classList.add('done'),700);
