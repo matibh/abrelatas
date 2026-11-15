@@ -95,13 +95,14 @@ const rollers=[];for(let i=0;i<24;i++){const r=cylinder(scene,[-5.6+i*.48,.68,1.
 const dust=[];for(let i=0;i<85;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.018+Math.random()*.025,6,6),new THREE.MeshBasicMaterial({color:0xffd7a0,transparent:true,opacity:.14+Math.random()*.22}));p.position.set((Math.random()-.5)*24,Math.random()*8-1,-6+Math.random()*12);scene.add(p);dust.push({mesh:p,speed:.15+Math.random()*.35,phase:Math.random()*6})}
 
 // Camera orbit: constrained, protagonist stays framed
-let yaw=.66,pitch=.32,distance=10.5,target=new THREE.Vector3(0,1.8,0),drag=false,lastX=0,lastY=0;
+let yaw=.66,pitch=.27,distance=7.2,target=new THREE.Vector3(-3.2,1.55,.15),drag=false,lastX=0,lastY=0;
 function updateCamera(){const p=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch)*distance,Math.sin(pitch)*distance,Math.cos(yaw)*Math.cos(pitch)*distance);camera.position.copy(target).add(p);camera.lookAt(target)}
 updateCamera();
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;yaw-=dx*.005;pitch=Math.max(-.05,Math.min(.9,pitch+dy*.004));updateCamera()});
 renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);
-renderer.domElement.addEventListener('wheel',e=>{distance=Math.max(6,Math.min(15,distance+e.deltaY*.009));updateCamera()},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{distance=Math.max(5.8,Math.min(13,distance+e.deltaY*.009));updateCamera()},{passive:true});
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Story timeline
 const captions=[
@@ -121,6 +122,16 @@ function smooth(a,b,t){const x=THREE.MathUtils.clamp((t-a)/(b-a),0,1);return x*x
 function animate(now){requestAnimationFrame(animate);const elapsed=(now-start)/1000;const t=Math.min(elapsed,duration);const s=Math.min(t/duration,1);
 setCaption(t);progress.style.width=(s*100)+'%';
 const intro=smooth(0,7,t),assemble=smooth(11,21,t),test=smooth(21,29,t),pack=smooth(29,39,t),close=smooth(40,47,t);
+// La cámara acompaña al abrelatas y revela cada estación sin perderlo de vista.
+const focusFactory=new THREE.Vector3(-1.15,1.85,.05);
+const focusPacking=new THREE.Vector3(7.15,1.9,.05);
+const focusEnd=new THREE.Vector3(7.5,1.45,-.1);
+let desiredFocus;
+if(t<11){desiredFocus=new THREE.Vector3(-3.2,1.55,.15).lerp(focusFactory,smooth(3,11,t));distance=THREE.MathUtils.lerp(7.2,9.1,smooth(3,11,t))}
+else if(t<29){desiredFocus=focusFactory.clone();distance=9.1}
+else if(t<40){desiredFocus=focusFactory.clone().lerp(focusPacking,pack);distance=THREE.MathUtils.lerp(9.1,7.6,pack)}
+else{desiredFocus=focusPacking.clone().lerp(focusEnd,close);distance=7.6}
+target.lerp(desiredFocus,.075);updateCamera();
 hero.position.x=-.2+Math.min(t/25,1)*.5;hero.position.y=1.2+Math.sin(now*.0015)*.025;
 body.rotation.z=Math.sin(now*.0012)*.012;
 if(t<12){hero.position.x=-3.8+intro*3.6;hero.position.z=.15;hero.scale.setScalar(.001+intro*.92)}
@@ -135,5 +146,5 @@ requestAnimationFrame(animate);
 document.querySelector('#skip').addEventListener('click',()=>{start=performance.now()-(duration-1)*1000});
 document.querySelector('#skip').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){start=performance.now()-(duration-1)*1000}});
 document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;scene.fog.density=.026;scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
-window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8))});
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
 setTimeout(()=>document.querySelector('#loading').classList.add('done'),700);
