@@ -114,7 +114,7 @@ const captions=[
 {at:49,k:'FIN DEL PRÓLOGO',t:'Una vida entera<br/>está por comenzar.',p:'Próxima parada: el supermercado.',label:'EL VIAJE COMIENZA'}
 ];
 const title=document.querySelector('#caption-title'),copy=document.querySelector('#caption-copy'),kicker=document.querySelector('#caption-kicker'),progress=document.querySelector('#timeline-progress'),timelineLabel=document.querySelector('#timeline-label');
-let start=performance.now(),duration=57,muted=true,completed=false;
+let start=performance.now(),duration=57,completed=false;
 function setCaption(time){let c=captions[0];for(const item of captions)if(time>=item.at)c=item;const idx=captions.indexOf(c);if(setCaption.last!==idx){setCaption.last=idx;kicker.textContent=c.k;title.innerHTML=c.t;copy.textContent=c.p;timelineLabel.textContent=c.label}}
 setCaption.last=-1;
 function smooth(a,b,t){const x=THREE.MathUtils.clamp((t-a)/(b-a),0,1);return x*x*(3-2*x)}
@@ -135,6 +135,5 @@ requestAnimationFrame(animate);
 document.querySelector('#skip').addEventListener('click',()=>{start=performance.now()-(duration-1)*1000});
 document.querySelector('#skip').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){start=performance.now()-(duration-1)*1000}});
 document.querySelector('#restart').addEventListener('click',()=>{start=performance.now();completed=false;document.querySelector('#end-card').classList.add('hidden');hero.visible=true;blister.visible=true;carton.visible=false;scene.fog.density=.026;scene.background.set('#8d7860');renderer.domElement.style.opacity='1'});
-document.querySelector('#sound-toggle').addEventListener('click',e=>{muted=!muted;e.currentTarget.innerHTML=muted?'♫ <span>SONIDO</span>':'♫ <span>SONIDO ACTIVADO</span>'});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8))});
 setTimeout(()=>document.querySelector('#loading').classList.add('done'),700);
